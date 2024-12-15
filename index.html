@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX JSON Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            padding: 8px;
+            margin-right: 10px;
+            width: 200px;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button.reset {
+            background-color: #dc3545;
+        }
+
+        button.reset:hover {
+            background-color: #c82333;
+        }
+
+        .json-view, .formatted-view {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 4px;
+            min-height: 300px;
+            overflow-y: auto;
+        }
+
+        .json-view {
+            background-color: #f8f9fa;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+
+        .error-message {
+            color: #dc3545;
+            padding: 10px;
+            border: 1px solid #dc3545;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>AJAX JSON Viewer</h1>
+    
+    <div class="controls">
+        <div class="input-group">
+            <input type="number" id="postId" placeholder="Enter post ID (1-100)" min="1" max="100">
+            <button onclick="loadData()">Load Data</button>
+            <button class="reset" onclick="resetView()">Reset</button>
+        </div>
+        <div class="error-message" id="errorMessage"></div>
+    </div>
+
+    <div class="container">
+        <div class="json-view" id="jsonView">
+            <!-- Raw JSON will be displayed here -->
+        </div>
+        <div class="formatted-view" id="formattedView">
+            <!-- Formatted data will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://jsonplaceholder.typicode.com/posts';
+        
+        async function loadData() {
+            const postId = document.getElementById('postId').value;
+            const errorMessage = document.getElementById('errorMessage');
+            const jsonView = document.getElementById('jsonView');
+            const formattedView = document.getElementById('formattedView');
+
+            // Hide any previous error messages
+            errorMessage.style.display = 'none';
+
+            try {
+                const url = postId ? `${API_BASE_URL}/${postId}` : API_BASE_URL;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+
+                const data = await response.json();
+                
+                // Display raw JSON
+                jsonView.textContent = JSON.stringify(data, null, 2);
+
+                // Display formatted data
+                formattedView.innerHTML = formatData(data);
+
+            } catch (error) {
+                errorMessage.textContent = 'Failed to load data. Please try again.';
+                errorMessage.style.display = 'block';
+                console.error('Error:', error);
+            }
+        }
+
+        function formatData(data) {
+            if (Array.isArray(data)) {
+                return data.map(item => createCard(item)).join('');
+            }
+            return createCard(data);
+        }
+
+        function createCard(item) {
+            return `
+                <div class="card">
+                    <h3>${item.title}</h3>
+                    <p><strong>ID:</strong> ${item.id}</p>
+                    <p><strong>User ID:</strong> ${item.userId}</p>
+                    <p>${item.body}</p>
+                </div>
+            `;
+        }
+
+        function resetView() {
+            document.getElementById('postId').value = '';
+            document.getElementById('jsonView').textContent = '';
+            document.getElementById('formattedView').innerHTML = '';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+    </script>
+</body>
+</html> 
